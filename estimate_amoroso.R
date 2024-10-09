@@ -256,7 +256,7 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
   #---------#
   
   if (plot == 0) {
-    print("no plot",
+    cat("no plot",
     "\n--------------------------------------------------------------------\n\n")
   
   #---------------------------------------#
@@ -334,7 +334,7 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
     # Loop through methods
     for (i in seq(1, nrow(all_models_tib), by = 2)) {
       # Subset two rows of the method
-      meth_tib <- res$all_models[i:(i+1), ]
+      meth_tib <- all_models_tib[i:(i+1), ]
       # Extract parameters for model in +ve parameter space
       pos_par <- meth_tib %>%
         slice(1) %>%

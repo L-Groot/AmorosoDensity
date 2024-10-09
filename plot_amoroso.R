@@ -15,7 +15,7 @@ dAmoroso <- function(x, a, l, c, mu) {
 }
 
 # Make function that plots Amoroso
-plot_amoroso <- function(x_range, a, l, c, mu,
+plot_amoroso <- function(x_vals, a, l, c, mu,
                          col = "blue", minimal = TRUE,
                          ymax = 1.0,
                          main = "", cex.main = 1.9) {
@@ -27,7 +27,7 @@ plot_amoroso <- function(x_range, a, l, c, mu,
     # For alpha > 0
   } else if (a > 0){
     density_values <- c()
-    for (x in x_range) {
+    for (x in x_vals) {
       if(x < mu) { # assign density of 0 to all x smaller than mu
         density_values <- append(density_values,0)
       } else {
@@ -39,7 +39,7 @@ plot_amoroso <- function(x_range, a, l, c, mu,
     # For alpha < 0
   } else if (a < 0) {
     density_values <- c()
-    for (x in x_range) {
+    for (x in x_vals) {
       if(x > mu) { # assign density of 0 to all x greater than mu
         density_values <- append(density_values,0)
       } else {
@@ -50,10 +50,10 @@ plot_amoroso <- function(x_range, a, l, c, mu,
   }
   
   
-  # Plot the density values against the x_range
+  # Plot the density values against the x_vals
   if (minimal == FALSE) {
     
-    plot(x_range, density_values, type = "l", col = col,
+    plot(x_vals, density_values, type = "l", col = col,
          main = main,
          xlab = "", ylab = "",
          lwd = 2,
@@ -77,7 +77,7 @@ plot_amoroso <- function(x_range, a, l, c, mu,
     
   } else { # minimal = TRUE
     
-    plot(x_range, density_values, type = "l", col = col,
+    plot(x_vals, density_values, type = "l", col = col,
          main = main,
          xlab = "", ylab = "",
          lwd = 2,
