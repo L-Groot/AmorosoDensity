@@ -447,7 +447,7 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
     all_models = all_models_tib,
     win_models = win_models_tib, 
     win_model = win_model_tib, 
-    x_values = xx
+    x = xx
   )))
   
 }
