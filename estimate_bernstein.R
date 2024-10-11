@@ -6,6 +6,24 @@ estimate_bernstein <- function(dat, breaks = 20, plot = FALSE,
                               main = "Bernstein Polynomial Fit",
                               bound_type = "sd") {
   
+  # Extract vector name
+  vecname <- paste0("'",deparse(substitute(dat)),"'")
+    
+  # Print busy statement
+  cat("\n\nBusy estimating Bernstein...\nUsing the provided vector",
+                 vecname,"'\n",
+                 "\n--------------------------------------------------------------------\n\n")
+  
+  # Remove any missing values
+  num_nas_to_remove <- length(dat) - length(na.omit(dat))
+  dat <- na.omit(dat)
+  
+  # Print how many NAs were removed
+  if(num_nas_to_remove > 0) {
+    message(c("WARNING: ", as.character(num_nas_to_remove), " NAs were removed from the data.\n"))
+    cat("--------------------------------------------------------------------\n")
+  }
+  
   # Calculate min and max value of density() fit
   min_x <- min(density(dat)$x)
   max_x <- max(density(dat)$x)
@@ -26,7 +44,10 @@ estimate_bernstein <- function(dat, breaks = 20, plot = FALSE,
   }
   
   # Return object
-  return(list(x = x_vals, y = y_vals))
+  return(invisible(
+    list(x = x_vals,
+         y = y_vals
+    )))
 }
 
 
@@ -35,6 +56,7 @@ estimate_bernstein <- function(dat, breaks = 20, plot = FALSE,
 # estimate_bernstein(data, plot = TRUE, bound_type = "sd")
 # estimate_bernstein(data, plot = TRUE, bound_type = "Carv")
 
-
+dat <- palmerpenguins::penguins$flipper_length_mm
+estimate_bernstein(dat)
 
 
