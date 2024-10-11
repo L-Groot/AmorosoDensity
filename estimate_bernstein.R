@@ -1,6 +1,11 @@
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
-source("umdz_Rfunction.R")
+# Source basis function for estimating Bernstein from Turnbull & Ghosh (2014)
+source("https://raw.githubusercontent.com/L-Groot/AmorosoDensity/refs/heads/main/umdz_Rfunction.R")
+
+#-------------------------------------------------------------------------------
+# Make estimate_bernstein() function
+#-------------------------------------------------------------------------------
 
 estimate_bernstein <- function(dat, breaks = 20, plot = FALSE,
                               main = "Bernstein Polynomial Fit",
