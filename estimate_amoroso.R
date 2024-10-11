@@ -1,13 +1,15 @@
 # Load packages
-ifelse(!require(AmoRosoDistrib),
-       install.packages("AmoRosoDistrib"),library(AmoRosoDistrib))
-ifelse(!require(dplyr),
-       install.packages("dplyr"),library(dplyr))
+if (!requireNamespace("AmoRosoDistrib", quietly = TRUE)) {
+  install.packages("AmoRosoDistrib")}
+library(AmoRosoDistrib)
 
+if (!requireNamespace("dplyr", quietly = TRUE)) {
+  install.packages("dplyr")}
+library(dplyr)
 
-#----------------------------
-# Define Amoroso PDF function
-#----------------------------
+#-------------------
+# Define Amoroso PDF
+#-------------------
 
 dAmoroso <- function(x, a, lambda, c, mu) {
   c1 <- 1/(gamma(lambda))
@@ -17,28 +19,30 @@ dAmoroso <- function(x, a, lambda, c, mu) {
   return(c1*c2*c3*c4)
 }
 
-#---------------------------------------------
-# Define the negative LL function for Amoroso
-#---------------------------------------------
+#-----------------------------------------------------
+# Define Amoroso negative log likelihood (LL) function
+#-----------------------------------------------------
 
-negLogLik <- function(params, data) {
+get_negLL_amo <- function(data, params) {
   a <- params[1]
   lambda <- params[2]
   c <- params[3]
   mu <- params[4]
   
-  sum(-log(dAmoroso(data, a, lambda, c, mu)))
+  negLL <- sum(-log(dAmoroso(data, a, lambda, c, mu)))
+  
+  return(negLL)
 }
 
-#--------------------
-# Define BIC function
-#--------------------
+#----------------------------
+# Define Amoroso BIC function
+#----------------------------
 
 # --> calculates BIC for a certain Amoroso distribution fit to a certain data
-get_BIC <- function(data, params) {
+get_BIC_amoroso <- function(data, params) {
   N <- length(data)
   P <- length(params)
-  LL <- -negLogLik(params, data)
+  LL <- -get_negLL_amo(data, params)
   BIC <- LL + log(N) * (P + 1)
   return(BIC)
 }
@@ -54,10 +58,14 @@ access_info <- "\nHOW TO ACCESS FULL OUTPUT:\n
   Then you can access the following:\n
   - res$all_models: tibble that contains all 18 estimated Amorosos (9 methods
   x 2 parameter spaces (- and +)\n
-  - res$win_models: tibble that contains, for each estimation method, the Amoroso
+  - res$min_BIC_models: tibble that contains, for each estimation method, the Amoroso
   fit with the lower BIC (i.e., either in -ve or +ve parameter space)\n
-  - res$win_model: single-row tibble that contains the Amoroso fit with the lowest
+  - res$max_L_models: tibble that contains, for each estimation method, the Amoroso
+  fit with the higher likelihood (i.e., either in -ve or +ve parameter space)\n
+  - res$min_BIC_model: single-row tibble that contains the Amoroso fit with the lowest
   BIC overall\n
+  - res$max_L_model: single-row tibble that contains the Amoroso fit with the highest
+  likelihood overall\n
 --------------------------------------------------------------------\n"
 
 one_plot_info <- "\nABOUT THE PLOT:\n
@@ -66,7 +74,8 @@ one_plot_info <- "\nABOUT THE PLOT:\n
   Amoroso fits from the initial parameter estimation (as described by Combes
   et al. (2022). Each coloured line corresponds to the Amoroso fit of one method.
   Since each method has two sets of parameter estimates (+ve and -ve space), the
-  plot shows only the one that fits the data better according to the BIC. For
+  plot shows only the one that fits the data better according to the selected
+  criterion (default 'BIC' for lower BIC; 'maxL' for higher likelihood). For
   some methods this may be the parameter set in negative space and for other
   methods this may be the parameter set in positive space.\n"
 grid_plots_info <- "\nABOUT THE PLOTS:\n
@@ -75,17 +84,20 @@ grid_plots_info <- "\nABOUT THE PLOTS:\n
   parameter estimates in negative space (red line). The dark-grey line is the
   fit of the nonparametric R Kernel density.\n"
 best_plot_info <- "\nABOUT THE PLOT:\n
-  The plot shows the Amoroso fit with the lowest BIC. That is,
-  after fitting the Amoroso with each method described in Combes et al. (2022) in
-  both parameter spaces (+ve and -ve), the BIC was calculated for each of the 18
-  resulting Amoroso fits (9 methods x 2 parameter spaces). Out of the 18 fits, the
-  one with the lowest BIC is selected as the 'best' Amoroso fit.\n"
+  The plot shows the best Amoroso overall, selected either by minimizing BIC
+  (criterion == 'BIC) or maximizing likelihood (criterion == 'maxL'). More
+  specifically, after fitting the Amoroso with each method described in
+  Combes et al. (2022) in both parameter spaces (+ve and -ve), the likelihood/BIC
+  was calculated for each of the 18 resulting Amoroso fits (9 methods x
+  2 parameter spaces). Then, of all the 18 fits, the one with the lowest BIC/
+  highest likelihood is selected as the 'best' fit.\n"
 
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 
 estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
+                             criterion = "BIC",
                              plot = 1,
                              breaks = 20,
                              varname = NULL,
@@ -94,6 +106,10 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
   # Provide either a datavector for 'vec' OR
   # provide the dataframe to 'dataframe' and the column name of the variable as
   # a string to 'variable.
+  
+  # criterion: criterion for model selection
+  # ("LL" for maximum log likelihood or "BIC" for minimum BIC)
+  # criterion is irrelevant when plot == 2
   
   # plot = 0: no plot
   # plot = 1: plot Amorosos of all estimation methods (but only the lower BIC one)
@@ -193,7 +209,9 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
                    mhecresp, mhecresn, # Hellinger (CDF)
                    mwecresp, mwecresn, # Wasserstein (CDF)
                    msqdferesp, msqdferesn # Squared (CDF)
-                   )
+  )
+  
+  fit_list
   
   
   ##############################################
@@ -201,17 +219,18 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
   ##############################################
   
   names_vec <- rep(c("MLE", "Kullback-Leibler PDF", "Jensen-Shanon PDF",
-                 "Hellinger PDF", "Wasserstein PDF", "Squared PDF",
-                 "Hellinger CDF", "Wasserstein CDF", "Squared CDF"), each = 2)
+                     "Hellinger PDF", "Wasserstein PDF", "Squared PDF",
+                     "Hellinger CDF", "Wasserstein CDF", "Squared CDF"), each = 2)
   
   all_models_df <- data.frame(method = names_vec)
   
   par_space_vec <- rep(c("+", "-"), times = length(names_vec)/2)
-  a_vec <- sapply(fit_list, function(x) x$par[1])
-  l_vec <- sapply(fit_list, function(x) x$par[2])
-  c_vec <- sapply(fit_list, function(x) x$par[3])
-  mu_vec <- sapply(fit_list, function(x) x$par[4])
-  BIC_vec <- sapply(fit_list, function(fit) get_BIC(y, fit$par))
+  a_vec <- sapply(fit_list, function(fit) fit$par[1])
+  l_vec <- sapply(fit_list, function(fit) fit$par[2])
+  c_vec <- sapply(fit_list, function(fit) fit$par[3])
+  mu_vec <- sapply(fit_list, function(fit) fit$par[4])
+  BIC_vec <- sapply(fit_list, function(fit) get_BIC_amoroso(y, fit$par))
+  negLL_vec <- sapply(fit_list, function(fit) get_negLL_amo(y, c(fit$par)))
   
   all_models_tib <- all_models_df %>% mutate(
     space = par_space_vec,
@@ -219,6 +238,7 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
     l = l_vec,
     c = c_vec,
     mu = mu_vec,
+    negLL = negLL_vec,
     BIC = BIC_vec) %>%
     as_tibble()
   
@@ -227,24 +247,39 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
   ## Make dataframe of lowest BIC model PER METHOD ##
   ###################################################
   
-  win_models_tib <- all_models_tib %>%
+  min_BIC_models_tib <- all_models_tib %>%
     group_by(method) %>%
     filter(BIC == min(BIC)) %>%
     ungroup()
   
+  ##################################################
+  ## Make dataframe of higher LL model PER METHOD ##
+  ##################################################
+  
+  max_L_models_tib <- all_models_tib %>%
+    group_by(method) %>%
+    filter(negLL == min(negLL)) %>%
+    ungroup()
   
   ###############################################
   ## Make dataframe of lowest BIC model OF ALL ##
   ###############################################
   
-  win_model_tib <- win_models_tib %>%
+  min_BIC_model_tib <- min_BIC_models_tib %>%
     filter(BIC == min(BIC))
   
-
+  #########################################
+  ## Make dataframe of highest LL OF ALL ##
+  #########################################
+  
+  max_L_model_tib <- max_L_models_tib %>%
+    filter(negLL == min(negLL))
+  
+  
   ###########
   ## PLOTS ##
   ###########
-
+  
   # Define x
   xx <- seq(min(density(y)$x), max(density(y)$x), length = 10000)
   
@@ -257,16 +292,25 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
   
   if (plot == 0) {
     cat("no plot",
-    "\n--------------------------------------------------------------------\n\n")
-  
-  #---------------------------------------#
-  # One plot with best Amoroso per method #
-  #---------------------------------------#
+        "\n--------------------------------------------------------------------\n\n")
+    
+    #---------------------------------------#
+    # One plot with best Amoroso per method #
+    #---------------------------------------#
     
   } else if (plot == 1) {
+    
+    # Choose model selection criterion
+    if(criterion == "BIC") {
+      win_models_tib <- min_BIC_models_tib
+    } else if (criterion == "maxL") {
+      win_models_tib <- max_L_models_tib
+    } else {
+      print("ERROR 1")
+    }
     # Print plot info in console
     cat(one_plot_info,
-    "\n--------------------------------------------------------------------\n\n")
+        "\n--------------------------------------------------------------------\n\n")
     # Parameter settings
     par(cex.main = 1.4, cex.axis = 1, cex.lab = 1.2, bty = "n", font.lab = 2)
     # Initialize title
@@ -320,15 +364,16 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
            bty = "n",
            cex = 0.7)
     box()
-  
+    
     #--------------------------------------------#
     # 3x3 grid of plots with one plot per method #
     #--------------------------------------------#
     
   } else if (plot == 2) {
+    
     # Print info about plots
     cat(grid_plots_info,
-    "\n--------------------------------------------------------------------\n\n")
+        "\n--------------------------------------------------------------------\n\n")
     # Make 3x3 grid
     par(mfrow = c(3, 3), cex.axis = 0.8)
     # Loop through methods
@@ -356,21 +401,30 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
       lines(dens$x, dens$y, col = "grey70", lty = 1, lwd = 1.5)
       # Add a>0 model
       points(xx, dgg4(xx, pos_par[1], pos_par[2], pos_par[3], pos_par[4]),
-                       type = "l", lwd = 1.5, col = "sienna3", lty = 1)
+             type = "l", lwd = 1.5, col = "sienna3", lty = 1)
       # Add a<0 model
       points(xx, dgg4(xx, neg_par[1], neg_par[2], neg_par[3], neg_par[4]),
-                type = "l", lwd = 1.5, col = "steelblue3", lty = 1)
+             type = "l", lwd = 1.5, col = "steelblue3", lty = 1)
       # Add legend
       legend("topright", legend = c("R density()", "α > 0", "α < 0"),
              col = c("grey70", "sienna3", "steelblue3"), lty = c(1, 1, 1),
              lwd = 1.5, bty = "n", cex = 0.8)
     }
-  
+    
     #---------------------------#
     # Plot only winning Amoroso #
     #---------------------------#
     
   } else if (plot == 3) {
+    
+    # Choose model selection criterion
+    if(criterion == "BIC") {
+      win_model_tib <- min_BIC_model_tib
+    } else if (criterion == "maxL") {
+      win_model_tib <- max_L_model_tib
+    } else {
+      print("ERROR 2")
+    }
     # Print plot info in console
     cat(best_plot_info,
         "\n--------------------------------------------------------------------\n\n")
@@ -414,7 +468,7 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
            lty = c(1, 1),
            bty = "n",
            cex = 1.2)
-  
+    
     #-----------------------------------------------#
     # Error message: inadmissible plotting argument #
     #-----------------------------------------------#
@@ -430,13 +484,21 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
   ####################
   
   # Print best model info
+  cat("MAXIMUM LIKELIHOOD AMOROSO:\n\n",
+      paste0(max_L_model_tib$method," (",max_L_model_tib$space,")"),"\n")
+  cat("-LL:", max_L_model_tib$negLL, "\n")
+  cat(paste0(" α = ", round(max_L_model_tib$a,digits=2), ", ",
+             "\u2113 = ", round(max_L_model_tib$l,digits=2), ", ",
+             "c = ", round(max_L_model_tib$c,digits=2), ", ",
+             "μ = ", round(max_L_model_tib$mu,digits=2)),"\n\n")
+  
   cat("LOWEST BIC AMOROSO:\n\n",
-      paste0(win_model_tib$method," (",win_model_tib$space,")"),"\n")
-  cat(" BIC:", win_model_tib$BIC, "\n")
-  cat(paste0(" α = ", round(win_model_tib$a,digits=2), ", ",
-             "\u2113 = ", round(win_model_tib$l,digits=2), ", ",
-             "c = ", round(win_model_tib$c,digits=2), ", ",
-             "μ = ", round(win_model_tib$mu,digits=2)),"\n")
+      paste0(min_BIC_model_tib$method," (",min_BIC_model_tib$space,")"),"\n")
+  cat(" BIC:", min_BIC_model_tib$BIC, "\n")
+  cat(paste0(" α = ", round(min_BIC_model_tib$a,digits=2), ", ",
+             "\u2113 = ", round(min_BIC_model_tib$l,digits=2), ", ",
+             "c = ", round(min_BIC_model_tib$c,digits=2), ", ",
+             "μ = ", round(min_BIC_model_tib$mu,digits=2)),"\n")
   cat("\n--------------------------------------------------------------------\n")
   
   # Print info on how to access full output
@@ -445,13 +507,14 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
   # Return all win models and final best model
   return(invisible(list(
     all_models = all_models_tib,
-    win_models = win_models_tib, 
-    win_model = win_model_tib, 
+    min_BIC_models = min_BIC_models_tib,
+    max_L_models = max_L_models_tib,
+    min_BIC_model_tib = min_BIC_model_tib,
+    max_L_model = max_L_model_tib, 
     x = xx
   )))
   
 }
-
 
 
 #-------------------------------------------------------------------------------
@@ -461,14 +524,18 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
 # Test the function
 #-----------------------------------------
 
-ifelse(!require(palmerpenguins),
-       install.packages("palmerpenguins"),library(palmerpenguins))
-#dat <- palmerpenguins::penguins$flipper_length_mm
+if (!requireNamespace("palmerpenguins", quietly = TRUE)) {
+  install.packages("palmerpenguins")}
+library(palmerpenguins)
+
+dat <- palmerpenguins::penguins$flipper_length_mm
 #dat <- palmerpenguins::penguins$bill_length_mm
 #dat <- palmerpenguins::penguins$bill_depth_mm
 
-#estimate_amoroso(dat)
-#res <- estimate_amoroso(dat, plot = 1)
-#res <- estimate_amoroso(dat, plot = 2)
-#res <- estimate_amoroso(dat, plot = 3)
+res <- estimate_amoroso(dat, plot = 1, criterion = "BIC")
+res <- estimate_amoroso(dat, plot = 1, criterion = "maxL")
 
+res <- estimate_amoroso(dat, plot = 2)
+
+res <- estimate_amoroso(dat, plot = 3, criterion = "BIC")
+res <- estimate_amoroso(dat, plot = 3, criterion = "maxL")
