@@ -10,7 +10,7 @@ estimate_bernstein <- function(dat, breaks = 20, plot = FALSE,
   vecname <- paste0("'",deparse(substitute(dat)),"'")
     
   # Print busy statement
-  cat("\n\nBusy estimating Bernstein...\nUsing the provided vector",
+  cat("\nBusy estimating Bernstein...\nUsing the provided vector",
                  vecname,"'\n",
                  "\n--------------------------------------------------------------------\n\n")
   
@@ -56,7 +56,7 @@ estimate_bernstein <- function(dat, breaks = 20, plot = FALSE,
 # estimate_bernstein(data, plot = TRUE, bound_type = "sd")
 # estimate_bernstein(data, plot = TRUE, bound_type = "Carv")
 
-dat <- palmerpenguins::penguins$flipper_length_mm
-estimate_bernstein(dat)
+#dat <- palmerpenguins::penguins$bill_depth_mm
+#bern_res <- estimate_bernstein(dat, plot = TRUE)
 
 
