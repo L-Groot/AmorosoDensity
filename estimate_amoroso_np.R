@@ -7,17 +7,35 @@ source("https://raw.githubusercontent.com/L-Groot/AmorosoDensity/refs/heads/main
 if (!requireNamespace("scdensity", quietly = TRUE)) {
   install.packages("scdensity")}
 library(scdensity)
+# -> for Amoroso
+# -> for estimating adjusted KDE
+if (!requireNamespace("AmoRosoDistrib", quietly = TRUE)) {
+  install.packages("AmoRosoDistrib")}
+library(AmoRosoDistrib)
 
+#-------------------------------------------------------------------------------
+#dat <- palmerpenguins::penguins$bill_length_mm
+#dat <- rnrom(100)
 #-------------------------------------------------------------------------------
 
 estimate_amoroso_np <- function(dat, main = NULL, minimal = TRUE, plot = TRUE) {
+  
+  # Remove NA
+  num_nas_to_remove <- length(dat) - length(na.omit(dat))
+  dat <- as.vector(na.omit(dat))
+  
+  # Print how many NAs were removed
+  if(num_nas_to_remove > 0) {
+    message(c("WARNING: ", as.character(num_nas_to_remove), " NAs were removed from the data.\n"))
+    cat("--------------------------------------------------------------------\n")
+  }
   
   # Get n
   n <- length(dat)
   
   ## Estimate density with different methods ##
   # Amoroso
-  amo <- estimate_amoroso(dat, plot=0)
+  amo <- estimate_amoroso(dat, plot=0, criterion="maxL")
   # Bernstein
   bern1 <- estimate_bernstein(dat, bound_type = "sd")
   bern2 <- estimate_bernstein(dat, bound_type = "Carv")
@@ -28,11 +46,18 @@ estimate_amoroso_np <- function(dat, main = NULL, minimal = TRUE, plot = TRUE) {
   
   # Extract Amoroso parameters
   amo_xx <- amo$x
-  amo <- amo$max_L_model # get ML Amoroso
-  amo_pars <- as.vector(unlist(amo[,3:6]))
-  amoroso_name <- paste0(amo$method, " (", amo$space, ")")
+  amo_ML <- amo$max_L_model # get ML Amoroso
+  amo_ML_pars <- as.vector(unlist(amo_ML[,3:6]))
+  amo_ML_name <- paste0(amo_ML$method, " (", amo_ML$space, ")")
+  
+  
   # Get Amoroso density values
-  amo_yy <- dgg4(amo_xx, amo_pars[1], amo_pars[2], amo_pars[3], amo_pars[4])
+  
+  dAmoroso(amo_xx,19.2342455,0.3355688,5.0602110,31.9464149)
+  
+  
+  amo_yy <- dAmoroso(amo_xx, amo_ML_pars[1], amo_ML_pars[2], amo_ML_pars[3], amo_ML_pars[4])
+  amo_yy <- dgg4(amo_xx, amo_ML_pars[1], amo_ML_pars[2], amo_ML_pars[3], amo_ML_pars[4])
   # Replace NAs by zeroes
   amo_yy[is.na(amo_yy)] <- 0
   # Remove NA
@@ -41,7 +66,9 @@ estimate_amoroso_np <- function(dat, main = NULL, minimal = TRUE, plot = TRUE) {
   # amo_yy <- amo_yy[non_na_indices]
   
   # Define the range of x values
-  x_range <- seq(-3, 3, length.out = 1000)
+  #x_range <- seq(-3, 3, length.out = 1000)
+  buffer <- (max(dat)-min(dat))/10
+  x_range <- seq(min(dat)-buffer,max(dat)+buffer,length.out = 1000)
   
   # Define max of y values
   y_max <- max(density(dat)$y,amo_yy,bern1$y,bern2$y,
@@ -208,7 +235,3 @@ estimate_amoroso_np <- function(dat, main = NULL, minimal = TRUE, plot = TRUE) {
   }
   
 }
-
-set.seed(68)
-dat <- rnorm(20)
-estimate_amoroso_np(dat, main = "N = 20")
