@@ -126,12 +126,12 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
   
   
   #####################
-  ## Define data (y) ##
+  ## Define data (x) ##
   #####################
   
   if (!is.null(vec) && is.vector(vec)) {
     # If vector is provided directly, use it as y
-    y <- na.omit(vec)
+    x <- na.omit(vec)
     cat("\n\nBusy estimating Amoroso...\nUsing the provided vector",
         paste0("'",deparse(substitute(vec)),"'\n"),
         "\n--------------------------------------------------------------------\n\n")
@@ -143,7 +143,7 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
     }
   } else if (!is.null(dataframe) && !is.null(variable) && is.data.frame(dataframe) && is.character(variable)) {
     # If dataframe and variable are provided, extract variable from df and assign to y
-    y <- na.omit(eval(substitute(dataframe[[variable]])))
+    x <- na.omit(eval(substitute(dataframe[[variable]])))
     cat("Using the", variable, "variable from the", deparse(substitute(dataframe)), "dataframe. \n\n")
     # Check if any NAs were removed
     num_nas_removed <- length(eval(substitute(dataframe[[variable]]))) - length(na.omit(eval(substitute(dataframe[[variable]]))))
@@ -158,7 +158,7 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
          indeed exist and that spelling is correct. \n")
   }
   
-  length_y <- length(y) # nr observations
+  length_x <- length(x) # nr observations
   
   
   ######################################################################
@@ -167,38 +167,38 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
   
   # Find initializing parameters
   # -> For a > 0
-  init.a.pos = init.theta(data = y, -20, 20, length = 1000, a.pos = TRUE)
+  init.a.pos = init.theta(data = x, -20, 20, length = 1000, a.pos = TRUE)
   init.pos = init.a.pos[1:4]
   # -> For a < 0
-  init.a.neg = init.theta(data = y, -20, 20, length = 1000, a.pos = FALSE)
+  init.a.neg = init.theta(data = x, -20, 20, length = 1000, a.pos = FALSE)
   init.neg = init.a.neg[1:4]
   # MLE
-  mleresp <- fit.mle(y, init.pos)
-  mleresn <- fit.mle(y, init.neg) 
+  mleresp <- fit.mle(x, init.pos)
+  mleresn <- fit.mle(x, init.neg) 
   # Kullback-Leibler divergence (based on PDF)
-  mkleresp <- fit.mkle(y, init.pos)
-  mkleresn <- fit.mkle(y, init.neg) 
+  mkleresp <- fit.mkle(x, init.pos)
+  mkleresn <- fit.mkle(x, init.neg) 
   # Jensen-Shanon divergence (based on PDF)
-  mjseresp <- fit.mjse(y, init.pos) 
-  mjseresn <- fit.mjse(y, init.neg) 
+  mjseresp <- fit.mjse(x, init.pos) 
+  mjseresn <- fit.mjse(x, init.neg) 
   # Hellinger distance (based on PDF)
-  mheresp <- fit.mhe(y, init.pos) 
-  mheresn <- fit.mhe(y, init.neg) 
+  mheresp <- fit.mhe(x, init.pos) 
+  mheresn <- fit.mhe(x, init.neg) 
   # Wasserstein distance (based on PDF)
-  mWassderesp <- fit.mwe(y, init.pos, d = 4)   
-  mWassderesn <- fit.mwe(y, init.neg, d = 4)  
+  mWassderesp <- fit.mwe(x, init.pos, d = 4)   
+  mWassderesn <- fit.mwe(x, init.neg, d = 4)  
   # Squared distance (based on PDF)
-  msqeresp <- fit.msqe(y, init.pos) 
-  msqeresn <- fit.msqe(y, init.neg) 
+  msqeresp <- fit.msqe(x, init.pos) 
+  msqeresn <- fit.msqe(x, init.neg) 
   # Hellinger distance (based on CDF)
-  mhecresp <- fit.mhdfe(y, init.pos) 
-  mhecresn <- fit.mhdfe(y, init.neg) 
+  mhecresp <- fit.mhdfe(x, init.pos) 
+  mhecresn <- fit.mhdfe(x, init.neg) 
   # Wasserstein distance (based on CDF)
-  mwecresp <- fit.mwdfe(y, init.pos, d = 4)    
-  mwecresn <- fit.mwdfe(y, init.neg, d = 4)   
+  mwecresp <- fit.mwdfe(x, init.pos, d = 4)    
+  mwecresn <- fit.mwdfe(x, init.neg, d = 4)   
   # Squared distance (based on CDF)
-  msqdferesp <- fit.msqdfe(y, init.pos) 
-  msqdferesn <- fit.msqdfe(y, init.neg)
+  msqdferesp <- fit.msqdfe(x, init.pos) 
+  msqdferesn <- fit.msqdfe(x, init.neg)
   # PUT ALL IN A LIST
   fit_list <- list(mleresp, mleresn, # MLE
                    mkleresp, mkleresn, # Kullback-Leibler (PDF)
@@ -226,8 +226,8 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
   l_vec <- sapply(fit_list, function(fit) fit$par[2])
   c_vec <- sapply(fit_list, function(fit) fit$par[3])
   mu_vec <- sapply(fit_list, function(fit) fit$par[4])
-  BIC_vec <- sapply(fit_list, function(fit) get_BIC_amoroso(y, fit$par))
-  negLL_vec <- sapply(fit_list, function(fit) get_negLL_amo(y, c(fit$par)))
+  BIC_vec <- sapply(fit_list, function(fit) get_BIC_amoroso(x, fit$par))
+  negLL_vec <- sapply(fit_list, function(fit) get_negLL_amo(x, c(fit$par)))
   
   all_models_tib <- all_models_df %>% mutate(
     space = par_space_vec,
@@ -278,10 +278,10 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
   ###########
   
   # Define x
-  xx <- seq(min(density(y)$x), max(density(y)$x), length = 10000)
+  xx <- seq(min(density(x)$x), max(density(x)$x), length = 10000)
   
   # Calculate KDE
-  dens <- density(y)
+  dens <- density(x)
   
   #---------#
   # NO PLOT #
@@ -529,10 +529,10 @@ library(palmerpenguins)
 #dat <- palmerpenguins::penguins$bill_length_mm
 #dat <- palmerpenguins::penguins$bill_depth_mm
 
-# res <- estimate_amoroso(dat, plot = 1, criterion = "BIC")
-# res <- estimate_amoroso(dat, plot = 1, criterion = "maxL")
-# 
+#res <- estimate_amoroso(dat, plot = 1, criterion = "BIC")
+#res <- estimate_amoroso(dat, plot = 1, criterion = "maxL")
+ 
 # res <- estimate_amoroso(dat, plot = 2)
-# 
+
 # res <- estimate_amoroso(dat, plot = 3, criterion = "BIC")
 # res <- estimate_amoroso(dat, plot = 3, criterion = "maxL")
