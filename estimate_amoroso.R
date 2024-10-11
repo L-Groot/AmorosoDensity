@@ -211,9 +211,6 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
                    msqdferesp, msqdferesn # Squared (CDF)
   )
   
-  fit_list
-  
-  
   ##############################################
   ## Make dataframe with all estimated models ##
   ##############################################
