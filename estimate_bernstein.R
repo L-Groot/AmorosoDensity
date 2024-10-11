@@ -7,7 +7,7 @@ source("https://raw.githubusercontent.com/L-Groot/AmorosoDensity/refs/heads/main
 # Make estimate_bernstein() function
 #-------------------------------------------------------------------------------
 
-estimate_bernstein <- function(dat, breaks = 20, plot = FALSE,
+estimate_bernstein <- function(dat, breaks = 20, plot = FALSE, n = 512,
                               main = "Bernstein Polynomial Fit",
                               bound_type = "sd") {
   
@@ -35,7 +35,7 @@ estimate_bernstein <- function(dat, breaks = 20, plot = FALSE,
   
   # Estimate Bernstein
   res <- umd(dat, bound.type = bound_type)
-  x_vals <- seq(min_x, max_x, length.out = 1000)
+  x_vals <- seq(min_x, max_x, length.out = n)
   y_vals <- res$dumd(x_vals)
   
   if (plot == TRUE) {
