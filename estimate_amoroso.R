@@ -219,7 +219,11 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
                      "Hellinger PDF", "Wasserstein PDF", "Squared PDF",
                      "Hellinger CDF", "Wasserstein CDF", "Squared CDF"), each = 2)
   
-  all_models_df <- data.frame(method = names_vec)
+  names_ID <- rep(c("MLE", "KL-PDF", "JS-PDF", "Hell-PDF", "WASS-PDF", "SQU-PDF",
+                     "HELL-CDF", "WASS-CDF", "SQU-CDF"), each = 2)
+                     
+  
+  all_models_df <- data.frame(method = names_vec, method_ID = names_ID)
   
   par_space_vec <- rep(c("+", "-"), times = length(names_vec)/2)
   a_vec <- sapply(fit_list, function(fit) fit$par[1])
@@ -319,7 +323,7 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
       title <- paste0("Amoroso fits to '", variable, "'")
     }
     # Create histogram
-    hist(y, prob = T, main = title, breaks = breaks, col = "grey95",
+    hist(x, prob = T, main = title, breaks = breaks, col = "grey95",
          border = "grey85", axes = FALSE)
     axis(1)
     axis(2, las = 1)
@@ -360,7 +364,6 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
            lty = lty_vec,
            bty = "n",
            cex = 0.7)
-    box()
     
     #--------------------------------------------#
     # 3x3 grid of plots with one plot per method #
@@ -390,7 +393,7 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
       # Make plot title
       title <- meth_tib$method[[1]]
       # Plot histogram
-      hist(y, prob = T, main = title, breaks = breaks, col = "grey95",
+      hist(x, prob = T, main = title, breaks = breaks, col = "grey95",
            border = "grey85", axes = FALSE)
       axis(1)
       axis(2, las = 1)
@@ -442,7 +445,7 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
                       variable, "'")
     }
     # Make histogram
-    hist(y, prob = T, main = title, breaks = breaks, col = "grey95",
+    hist(x, prob = T, main = title, breaks = breaks, col = "grey95",
          border = "grey85", axes = FALSE, bty = "n")
     axis(1)
     axis(2, las = 1)
@@ -525,12 +528,12 @@ if (!requireNamespace("palmerpenguins", quietly = TRUE)) {
   install.packages("palmerpenguins")}
 library(palmerpenguins)
 
-#dat <- palmerpenguins::penguins$flipper_length_mm
+dat <- palmerpenguins::penguins$flipper_length_mm
 #dat <- palmerpenguins::penguins$bill_length_mm
 #dat <- palmerpenguins::penguins$bill_depth_mm
 
 #res <- estimate_amoroso(dat, plot = 1, criterion = "BIC")
-#res <- estimate_amoroso(dat, plot = 1, criterion = "maxL")
+res <- estimate_amoroso(dat, plot = 1, criterion = "maxL")
  
 # res <- estimate_amoroso(dat, plot = 2)
 
