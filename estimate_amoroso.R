@@ -506,7 +506,7 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
     all_models = all_models_tib,
     min_BIC_models = min_BIC_models_tib,
     max_L_models = max_L_models_tib,
-    min_BIC_model_tib = min_BIC_model_tib,
+    min_BIC_model = min_BIC_model_tib,
     max_L_model = max_L_model_tib, 
     x = xx
   )))
