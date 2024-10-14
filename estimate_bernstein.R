@@ -1,5 +1,3 @@
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-
 # Source basis function for estimating Bernstein from Turnbull & Ghosh (2014)
 source("https://raw.githubusercontent.com/L-Groot/AmorosoDensity/refs/heads/main/umdz_Rfunction.R")
 

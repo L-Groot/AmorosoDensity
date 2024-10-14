@@ -14,11 +14,11 @@ if (!requireNamespace("AmoRosoDistrib", quietly = TRUE)) {
 library(AmoRosoDistrib)
 
 #-------------------------------------------------------------------------------
-#dat <- palmerpenguins::penguins$bill_length_mm
-#dat <- rnrom(100)
+dat <- palmerpenguins::penguins$bill_length_mm
+dat <- rnrom(100)
 #-------------------------------------------------------------------------------
 
-estimate_amoroso_np <- function(dat, main = NULL, minimal = TRUE, plot = TRUE) {
+estimate_amoroso_np <- function(dat, main = NULL, plot = TRUE, minimal = TRUE) {
   
   # Remove NA
   num_nas_to_remove <- length(dat) - length(na.omit(dat))
@@ -52,14 +52,12 @@ estimate_amoroso_np <- function(dat, main = NULL, minimal = TRUE, plot = TRUE) {
   
   
   # Get Amoroso density values
-  
-  dAmoroso(amo_xx,19.2342455,0.3355688,5.0602110,31.9464149)
-  
-  
   amo_yy <- dAmoroso(amo_xx, amo_ML_pars[1], amo_ML_pars[2], amo_ML_pars[3], amo_ML_pars[4])
-  amo_yy <- dgg4(amo_xx, amo_ML_pars[1], amo_ML_pars[2], amo_ML_pars[3], amo_ML_pars[4])
+  #amo_yy <- dgg4(amo_xx, amo_ML_pars[1], amo_ML_pars[2], amo_ML_pars[3], amo_ML_pars[4])
+
   # Replace NAs by zeroes
   amo_yy[is.na(amo_yy)] <- 0
+  
   # Remove NA
   # non_na_indices <- !is.na(amo_yy)
   # amo_xx <- amo_xx[non_na_indices]
@@ -67,10 +65,10 @@ estimate_amoroso_np <- function(dat, main = NULL, minimal = TRUE, plot = TRUE) {
   
   # Define the range of x values
   #x_range <- seq(-3, 3, length.out = 1000)
-  buffer <- (max(dat)-min(dat))/10
-  x_range <- seq(min(dat)-buffer,max(dat)+buffer,length.out = 1000)
+  #buffer <- (max(dat)-min(dat))/10
+  x_range <- seq(min(amo_xx),max(amo_xx),length.out = 1000)
   
-  # Define max of y values
+  # Define max y (highest density value of all methods)
   y_max <- max(density(dat)$y,amo_yy,bern1$y,bern2$y,
                scKDE_2infplus$y,scKDE_2inf$y,scKDE_uni$y) + 0.05
   
@@ -106,7 +104,7 @@ estimate_amoroso_np <- function(dat, main = NULL, minimal = TRUE, plot = TRUE) {
       # Plot Amoroso (lowest BIC)
       plot(x_range, dnorm(x_range), ylim = c(0.0,y_max), type = "l",
            lwd = 1, lty = 2, col = "grey30",
-           main = amoroso_name,
+           main = "Amoroso Name",
            axes = F, xlab = "x", ylab = "Density")
       axis(1)
       axis(2, las=2)
@@ -188,7 +186,7 @@ estimate_amoroso_np <- function(dat, main = NULL, minimal = TRUE, plot = TRUE) {
            lwd = 1, lty = 2, col = "grey30",
            main = "",
            axes = F, xlab="", ylab ="")
-      mtext(amoroso_name, side=3, font=2, cex=1.5, line=1)
+      mtext("Amoroso Name", side=3, font=2, cex=1.5, line=1)
       axis(1, at = c(-4, 0, 4), labels = c(-4, 0, 4))
       lines(amo_xx, amo_yy, col = "blueviolet", lwd = 2)
       rug(dat, col = "dodgerblue3", lwd = 1)
