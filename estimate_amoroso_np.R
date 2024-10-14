@@ -3,6 +3,7 @@
 
 ### Load functions and packages ###
 
+
 # -> for estimating Amoroso
 source(paste0("https://raw.githubusercontent.com/L-Groot/AmorosoDensity/refs/",
               "heads/main/estimate_amoroso.R"))
@@ -22,8 +23,13 @@ if (!requireNamespace("AmoRosoDistrib", quietly = TRUE)) {
 library(AmoRosoDistrib)
 
 
+
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
+
+
+### Function that estimates and plots NP and Amoroso methods ###
+
 
 estimate_amoroso_np <- function(dat,
                                 plot = TRUE, hist = FALSE, minimal = FALSE,
@@ -70,15 +76,14 @@ estimate_amoroso_np <- function(dat,
     #as.vector(unlist(amo_win[,3:6]))
   amo_name <- paste0(amo_win$method, " (", amo_win$space, ")")
   amo_name_id <- paste0(amo_win$method_ID, " (", amo_win$space, ")")
-  print(amo_name)
-  print(amo_name_id)
   # Get Amoroso density values
   amo_yy <- dAmoroso(amo_xx, amo_pars[1], amo_pars[2], amo_pars[3], amo_pars[4])
   #amo_yy <- dgg4(amo_xx, amo_ML_pars[1], amo_ML_pars[2], amo_ML_pars[3], amo_ML_pars[4])
   # Replace NAs by zeroes
   amo_yy[is.na(amo_yy)] <- 0
   # Put Amoroso density values in a list
-  amo <- list(x = amo_xx, y = amo_yy, method = amo_name)
+  amo <- list(x = amo_xx, y = amo_yy,
+              method = amo_name, method_short = amo_name_id)
   
   
   #### Bernstein ####
@@ -131,7 +136,8 @@ estimate_amoroso_np <- function(dat,
     if (minimal == FALSE) {
       
       # Make main titles
-      titles <- c("R density() KDE", "Amoroso",
+      amo_title <- paste0("Amoroso", " (", amo$method_short, ")")
+      titles <- c("R density() KDE", amo_title,
                   "Bernstein Polynomials", "Bernstein Polynomials",
                   "Adj. KDE ('unimodal')","Adj. KDE ('twoInflections')",
                   "Adj. KDE ('twoInflections+')")
@@ -224,6 +230,12 @@ estimate_amoroso_np <- function(dat,
           rug(dat, col = "dodgerblue3", lwd = 1)
           mtext(titles[i], side=3, font=2, cex=1.5, line=1)
           
+          # Optional: add histogram
+          if (hist == TRUE) {
+            hist(dat, prob = T, breaks = 20, col = "grey95",
+                 border = "grey85", axes = FALSE, add = TRUE)
+          }
+          
           # Add density estimate
           lines(modlist[[i]]$x, modlist[[i]]$y, col = 'blueviolet', lwd = 2)
           
@@ -267,5 +279,12 @@ estimate_amoroso_np <- function(dat,
   
 }
 
-dat <- palmerpenguins::penguins$bill_depth_mm
-estimate_amoroso_np(dat, hist = TRUE)
+
+#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+
+
+### Test the function ###
+
+#dat <- palmerpenguins::penguins$bill_depth_mm
+#res <- estimate_amoroso_np(dat, hist = TRUE, minimal = FALSE)
