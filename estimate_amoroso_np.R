@@ -15,10 +15,12 @@ library(AmoRosoDistrib)
 
 #-------------------------------------------------------------------------------
 dat <- palmerpenguins::penguins$bill_length_mm
-dat <- rnrom(100)
+dat <- rnorm(100, mean = 4)
+estimate_amoroso_np(dat)
 #-------------------------------------------------------------------------------
 
-estimate_amoroso_np <- function(dat, main = NULL, plot = TRUE, minimal = TRUE) {
+estimate_amoroso_np <- function(dat, main = NULL, plot = TRUE, minimal = TRUE,
+                                generatedbynormal = TRUE, withmean = 0) {
   
   # Remove NA
   num_nas_to_remove <- length(dat) - length(na.omit(dat))
@@ -43,13 +45,13 @@ estimate_amoroso_np <- function(dat, main = NULL, plot = TRUE, minimal = TRUE) {
   scKDE_2infplus <- scdensity(dat, constraint = "twoInflections+")
   scKDE_2inf <- scdensity(dat, constraint = "twoInflections")
   scKDE_uni <- scdensity(dat, constraint = "unimodal")
-  
+  # R density
+  Rdens <- density(dat)
   # Extract Amoroso parameters
   amo_xx <- amo$x
   amo_ML <- amo$max_L_model # get ML Amoroso
   amo_ML_pars <- as.vector(unlist(amo_ML[,3:6]))
   amo_ML_name <- paste0(amo_ML$method, " (", amo_ML$space, ")")
-  
   
   # Get Amoroso density values
   amo_yy <- dAmoroso(amo_xx, amo_ML_pars[1], amo_ML_pars[2], amo_ML_pars[3], amo_ML_pars[4])
@@ -66,7 +68,10 @@ estimate_amoroso_np <- function(dat, main = NULL, plot = TRUE, minimal = TRUE) {
   # Define the range of x values
   #x_range <- seq(-3, 3, length.out = 1000)
   #buffer <- (max(dat)-min(dat))/10
-  x_range <- seq(min(amo_xx),max(amo_xx),length.out = 1000)
+  modlist <- list(Rdens,amo,bern1,bern2,scKDE_uni,scKDE_2inf,scKDE_2infplus)
+  xmin <- min(sapply(modlist, function(mod) min(mod$x)))
+  xmax <- max(sapply(modlist, function(mod) max(mod$x)))
+  x_range <- seq(xmin,xmax,length.out = 1000)
   
   # Define max y (highest density value of all methods)
   y_max <- max(density(dat)$y,amo_yy,bern1$y,bern2$y,
@@ -74,83 +79,86 @@ estimate_amoroso_np <- function(dat, main = NULL, plot = TRUE, minimal = TRUE) {
   
   if (plot == TRUE) {
     if (minimal == FALSE) {
-      
-      # Initialize 2x3 grid
-      par(mfrow=c(2,3), oma = c(0, 0, 5, 0), cex.axis = 0.9, font.lab = 2, font.axis = 1)
-      
-      # Plot R density() KDE
-      plot(x_range, dnorm(x_range), ylim = c(0.0,y_max), type = "l",
-           lwd = 1, lty = 2, col = "grey30",
-           main = "R density() KDE",
-           axes = F, xlab = "x", ylab = "Density")
-      axis(1)
-      axis(2, las=2)
-      lines(density(dat), col = 'mediumorchid2', lwd = 2)
-      rug(dat, col = "blue", lwd = 1)
-      
-      # Plot Bernstein
-      plot(x_range, dnorm(x_range), ylim = c(0.0,y_max), type = "l",
-           lwd = 1, lty = 2, col = "grey30",
-           main = "Bernstein Polynomial",
-           axes = F, xlab = "x", ylab = "Density")
-      axis(1)
-      axis(2, las=2)
-      lines(bern1$x, bern1$y, col = "mediumorchid2", lwd = 2)
-      lines(bern2$x, bern2$y, col = "chartreuse4", lwd = 2)
-      rug(dat, col = "blue", lwd = 1)
-      legend("topright", legend = c("bound.type = 'sd'","bound.type = 'Carv'"),
-             col = c("mediumorchid2","chartreuse4"), lty = 1, lwd = 2, cex = 0.8, bty = "n")
-      
-      # Plot Amoroso (lowest BIC)
-      plot(x_range, dnorm(x_range), ylim = c(0.0,y_max), type = "l",
-           lwd = 1, lty = 2, col = "grey30",
-           main = "Amoroso Name",
-           axes = F, xlab = "x", ylab = "Density")
-      axis(1)
-      axis(2, las=2)
-      lines(amo_xx, amo_yy, col = "mediumorchid2", lwd = 2)
-      rug(dat, col = "blue", lwd = 1)
-      
-      # Plot adj. KDE, constraint = "unimodal"
-      plot(x_range, dnorm(x_range), ylim = c(0.0,y_max), type = "l",
-           lwd = 1, lty = 2, col = "grey20",
-           main = "Adj. KDE — 'unimodal'",
-           axes = F, xlab = "x", ylab = "Density")
-      axis(1)
-      axis(2, las=2)
-      lines(scKDE_uni$x, scKDE_uni$y, col = "mediumorchid2", lwd = 2)
-      rug(dat, col = "blue", lwd = 1)
-      
-      # Plot adj. KDE, constraint = "twoInflections"
-      plot(x_range, dnorm(x_range), ylim = c(0.0,y_max), type = "l",
-           lwd = 1, lty = 2, col = "grey30",
-           main = "Adj. KDE — 'twoInflections'",
-           axes = F, xlab = "x", ylab = "Density")
-      axis(1)
-      axis(2, las=2)
-      lines(scKDE_2inf$x, scKDE_2inf$y, col = "mediumorchid2", lwd = 2)
-      rug(dat, col = "blue", lwd = 1)
-      
-      # Plot adj. KDE, constraint = "twoInflections+"
-      plot(x_range, dnorm(x_range), ylim = c(0.0,y_max), type = "l",
-           lwd = 1, lty = 2, col = "grey30",
-           main = "Adj. KDE — 'twoInflections+'",
-           axes = F, xlab = "x", ylab = "Density")
-      axis(1)
-      axis(2, las=2)
-      lines(scKDE_2infplus$x, scKDE_2infplus$y, col = "mediumorchid2", lwd = 2)
-      rug(dat, col = "blue", lwd = 1)
-      
-      # Add an overall title
-      if (is.null(main)) {
-        big_title <- paste0("rnorm(", as.character(n), ")")
-      } else {
-        big_title <- main
+      if(generatedbynormal == TRUE) {
+        # Initialize 2x3 grid
+        par(mfrow=c(2,3), oma = c(0, 0, 5, 0), cex.axis = 0.9, font.lab = 2, font.axis = 1)
+        
+        # Plot R density() KDE
+        plot(x_range, dnorm(x_range, mean = withmean), ylim = c(0.0,y_max), type = "l",
+             lwd = 1, lty = 2, col = "grey30",
+             main = "R density() KDE",
+             axes = F, xlab = "x", ylab = "Density")
+        axis(1)
+        axis(2, las=2)
+        lines(density(dat), col = 'mediumorchid2', lwd = 2)
+        rug(dat, col = "blue", lwd = 1)
+        
+        # Plot Bernstein
+        plot(x_range, dnorm(x_range, mean = withmean), ylim = c(0.0,y_max), type = "l",
+             lwd = 1, lty = 2, col = "grey30",
+             main = "Bernstein Polynomial",
+             axes = F, xlab = "x", ylab = "Density")
+        axis(1)
+        axis(2, las=2)
+        lines(bern1$x, bern1$y, col = "mediumorchid2", lwd = 2)
+        lines(bern2$x, bern2$y, col = "chartreuse4", lwd = 2)
+        rug(dat, col = "blue", lwd = 1)
+        legend("topright", legend = c("bound.type = 'sd'","bound.type = 'Carv'"),
+               col = c("mediumorchid2","chartreuse4"), lty = 1, lwd = 2, cex = 0.8, bty = "n")
+        
+        # Plot Amoroso (lowest BIC)
+        plot(x_range, dnorm(x_range, mean = withmean), ylim = c(0.0,y_max), type = "l",
+             lwd = 1, lty = 2, col = "grey30",
+             main = "Amoroso Name",
+             axes = F, xlab = "x", ylab = "Density")
+        axis(1)
+        axis(2, las=2)
+        lines(amo_xx, amo_yy, col = "mediumorchid2", lwd = 2)
+        rug(dat, col = "blue", lwd = 1)
+        
+        # Plot adj. KDE, constraint = "unimodal"
+        plot(x_range, dnorm(x_range, mean = withmean), ylim = c(0.0,y_max), type = "l",
+             lwd = 1, lty = 2, col = "grey20",
+             main = "Adj. KDE — 'unimodal'",
+             axes = F, xlab = "x", ylab = "Density")
+        axis(1)
+        axis(2, las=2)
+        lines(scKDE_uni$x, scKDE_uni$y, col = "mediumorchid2", lwd = 2)
+        rug(dat, col = "blue", lwd = 1)
+        
+        # Plot adj. KDE, constraint = "twoInflections"
+        plot(x_range, dnorm(x_range, mean = withmean), ylim = c(0.0,y_max), type = "l",
+             lwd = 1, lty = 2, col = "grey30",
+             main = "Adj. KDE — 'twoInflections'",
+             axes = F, xlab = "x", ylab = "Density")
+        axis(1)
+        axis(2, las=2)
+        lines(scKDE_2inf$x, scKDE_2inf$y, col = "mediumorchid2", lwd = 2)
+        rug(dat, col = "blue", lwd = 1)
+        
+        # Plot adj. KDE, constraint = "twoInflections+"
+        plot(x_range, dnorm(x_range, mean = withmean), ylim = c(0.0,y_max), type = "l",
+             lwd = 1, lty = 2, col = "grey30",
+             main = "Adj. KDE — 'twoInflections+'",
+             axes = F, xlab = "x", ylab = "Density")
+        axis(1)
+        axis(2, las=2)
+        lines(scKDE_2infplus$x, scKDE_2infplus$y, col = "mediumorchid2", lwd = 2)
+        rug(dat, col = "blue", lwd = 1)
+        
+        # Add an overall title
+        if (is.null(main)) {
+          big_title <- paste0("rnorm(", as.character(n), ")")
+        } else {
+          big_title <- main
+        }
+        
+        #mtext(big_title, outer = TRUE, cex = 1.5)
+        mtext(big_title, outer = TRUE, cex = 1.5, line = 2, font = 2)
       }
-      
-      #mtext(big_title, outer = TRUE, cex = 1.5)
-      mtext(big_title, outer = TRUE, cex = 1.5, line = 2, font = 2)
     }
+      
+      
     
     else {
       
