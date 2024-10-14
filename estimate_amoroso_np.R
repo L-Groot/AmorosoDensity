@@ -25,8 +25,10 @@ library(AmoRosoDistrib)
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 
-estimate_amoroso_np <- function(dat, main = NULL, plot = TRUE, minimal = FALSE,
-                                generatedbynormal = FALSE, withmean = 0, withsd = 1,
+estimate_amoroso_np <- function(dat,
+                                plot = TRUE, hist = FALSE, minimal = FALSE,
+                                main = NULL, generatedbynormal = FALSE,
+                                withmean = 0, withsd = 1,
                                 amorosocrit = "ML", xticks = NULL) {
   
   
@@ -61,15 +63,22 @@ estimate_amoroso_np <- function(dat, main = NULL, plot = TRUE, minimal = FALSE,
   } else {
     stop("'amorosocrit' must be either 'ML' or 'BIC'.")
   }
-  amo_pars <- as.vector(unlist(amo_win[,3:6]))
+  amo_pars <- amo_win %>%
+    slice(1) %>%
+    select(a, l, c, mu) %>% 
+    unlist(use.names = FALSE)
+    #as.vector(unlist(amo_win[,3:6]))
   amo_name <- paste0(amo_win$method, " (", amo_win$space, ")")
+  amo_name_id <- paste0(amo_win$method_ID, " (", amo_win$space, ")")
+  print(amo_name)
+  print(amo_name_id)
   # Get Amoroso density values
   amo_yy <- dAmoroso(amo_xx, amo_pars[1], amo_pars[2], amo_pars[3], amo_pars[4])
   #amo_yy <- dgg4(amo_xx, amo_ML_pars[1], amo_ML_pars[2], amo_ML_pars[3], amo_ML_pars[4])
   # Replace NAs by zeroes
   amo_yy[is.na(amo_yy)] <- 0
   # Put Amoroso density values in a list
-  amo <- list(x = amo_xx, y = amo_yy)
+  amo <- list(x = amo_xx, y = amo_yy, method = amo_name)
   
   
   #### Bernstein ####
@@ -146,6 +155,12 @@ estimate_amoroso_np <- function(dat, main = NULL, plot = TRUE, minimal = FALSE,
                  axis(1, at = xticks, labels = xticks))
           axis(2, las = 2)
           rug(dat, col = "blue", lwd = 1)
+          
+          # Optional: add histogram
+          if (hist == TRUE) {
+            hist(dat, prob = T, breaks = 20, col = "grey95",
+                 border = "grey85", axes = FALSE, add = TRUE)
+          }
           
           # Add density estimate
           lines(modlist[[i]]$x, modlist[[i]]$y, col = 'mediumorchid2', lwd = 2)
@@ -252,3 +267,5 @@ estimate_amoroso_np <- function(dat, main = NULL, plot = TRUE, minimal = FALSE,
   
 }
 
+dat <- palmerpenguins::penguins$bill_depth_mm
+estimate_amoroso_np(dat, hist = TRUE)
