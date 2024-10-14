@@ -528,12 +528,12 @@ if (!requireNamespace("palmerpenguins", quietly = TRUE)) {
   install.packages("palmerpenguins")}
 library(palmerpenguins)
 
-dat <- palmerpenguins::penguins$flipper_length_mm
+#dat <- palmerpenguins::penguins$flipper_length_mm
 #dat <- palmerpenguins::penguins$bill_length_mm
 #dat <- palmerpenguins::penguins$bill_depth_mm
 
 #res <- estimate_amoroso(dat, plot = 1, criterion = "BIC")
-res <- estimate_amoroso(dat, plot = 1, criterion = "maxL")
+#res <- estimate_amoroso(dat, plot = 1, criterion = "maxL")
  
 # res <- estimate_amoroso(dat, plot = 2)
 
