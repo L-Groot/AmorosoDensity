@@ -75,7 +75,7 @@ one_plot_info <- "\nABOUT THE PLOT:\n
   et al. (2022). Each coloured line corresponds to the Amoroso fit of one method.
   Since each method has two sets of parameter estimates (+ve and -ve space), the
   plot shows only the one that fits the data better according to the selected
-  criterion (default 'BIC' for lower BIC; 'maxL' for higher likelihood). For
+  criterion (default 'BIC' for lower BIC; 'ML' for higher likelihood). For
   some methods this may be the parameter set in negative space and for other
   methods this may be the parameter set in positive space.\n"
 grid_plots_info <- "\nABOUT THE PLOTS:\n
@@ -85,7 +85,7 @@ grid_plots_info <- "\nABOUT THE PLOTS:\n
   fit of the nonparametric R Kernel density.\n"
 best_plot_info <- "\nABOUT THE PLOT:\n
   The plot shows the best Amoroso overall, selected either by minimizing BIC
-  (criterion == 'BIC) or maximizing likelihood (criterion == 'maxL'). More
+  (criterion == 'BIC) or maximizing likelihood (criterion == 'ML'). More
   specifically, after fitting the Amoroso with each method described in
   Combes et al. (2022) in both parameter spaces (+ve and -ve), the likelihood/BIC
   was calculated for each of the 18 resulting Amoroso fits (9 methods x
@@ -97,7 +97,7 @@ best_plot_info <- "\nABOUT THE PLOT:\n
 #-------------------------------------------------------------------------------
 
 estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
-                             criterion = "BIC",
+                             criterion = "ML",
                              plot = 1,
                              breaks = 20,
                              varname = NULL,
@@ -304,7 +304,7 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
     # Choose model selection criterion
     if(criterion == "BIC") {
       win_models_tib <- min_BIC_models_tib
-    } else if (criterion == "maxL") {
+    } else if (criterion == "ML") {
       win_models_tib <- max_L_models_tib
     } else {
       print("ERROR 1")
@@ -420,7 +420,7 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
     # Choose model selection criterion
     if(criterion == "BIC") {
       win_model_tib <- min_BIC_model_tib
-    } else if (criterion == "maxL") {
+    } else if (criterion == "ML") {
       win_model_tib <- max_L_model_tib
     } else {
       print("ERROR 2")
@@ -533,9 +533,9 @@ library(palmerpenguins)
 #dat <- palmerpenguins::penguins$bill_depth_mm
 
 #res <- estimate_amoroso(dat, plot = 1, criterion = "BIC")
-#res <- estimate_amoroso(dat, plot = 1, criterion = "maxL")
+#res <- estimate_amoroso(dat, plot = 1, criterion = "ML")
  
 #res <- estimate_amoroso(dat, plot = 2)
 
 #res <- estimate_amoroso(dat, plot = 3, criterion = "BIC")
-#res <- estimate_amoroso(dat, plot = 3, criterion = "maxL")
+#res <- estimate_amoroso(dat, plot = 3, criterion = "ML")
