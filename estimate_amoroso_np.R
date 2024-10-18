@@ -274,7 +274,7 @@ estimate_amoroso_np <- function(dat,
   ############################
   ### 3. RETURN MODEL LIST ###
   ############################
-  
+  print(amo_pars)
   invisible(modlist)
   
 }

@@ -99,6 +99,7 @@ best_plot_info <- "\nABOUT THE PLOT:\n
 estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
                              criterion = "ML",
                              plot = 1,
+                             legend = "topright",
                              breaks = 20,
                              varname = NULL,
                              include.init = FALSE) {
@@ -358,7 +359,7 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
       legend_colors <- c(legend_colors, model_colors[i])
     }
     # Add legend
-    legend("topright", legend = legend_names,
+    legend(legend, legend = legend_names,
            lwd = 2,
            col = legend_colors,
            lty = lty_vec,
@@ -406,7 +407,7 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
       points(xx, dgg4(xx, neg_par[1], neg_par[2], neg_par[3], neg_par[4]),
              type = "l", lwd = 1.5, col = "steelblue3", lty = 1)
       # Add legend
-      legend("topright", legend = c("R density()", "α > 0", "α < 0"),
+      legend(legend, legend = c("R density()", "α > 0", "α < 0"),
              col = c("grey70", "sienna3", "steelblue3"), lty = c(1, 1, 1),
              lwd = 1.5, bty = "n", cex = 0.8)
     }
@@ -462,7 +463,7 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
     # Add legend
     legend_names <- c("R density()", method_name)
     legend_colors <- c("grey70","mediumpurple3")
-    legend("topright", legend = legend_names,
+    legend(legend, legend = legend_names,
            lwd = c(2,4),
            col = legend_colors,
            lty = c(1, 1),
