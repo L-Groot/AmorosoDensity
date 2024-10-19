@@ -82,7 +82,8 @@ estimate_amoroso_np <- function(dat,
   # Replace NAs by zeroes
   amo_yy[is.na(amo_yy)] <- 0
   # Put Amoroso density values in a list
-  amo <- list(x = amo_xx, y = amo_yy, pars = amo_pars,
+  amo <- list(x = amo_xx, y = amo_yy,
+              pars = amo_pars,
               method = amo_name, method_short = amo_name_id)
   
   
