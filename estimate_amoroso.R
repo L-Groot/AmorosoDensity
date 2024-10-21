@@ -294,9 +294,11 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
   #---------#
   
   if (plot == 0) {
-    cat("no plot",
-        "\n--------------------------------------------------------------------\n\n")
-    
+    if (print_results == TRUE) {
+      cat("no plot",
+          "\n--------------------------------------------------------------------\n\n")
+    }
+
     #---------------------------------------#
     # One plot with best Amoroso per method #
     #---------------------------------------#
