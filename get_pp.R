@@ -38,13 +38,13 @@ calculate_rmse <- function(pred, true) {
 
 
 #-------------------------------------------------------------------------------
-res <- get_pp(amo_pars = c(4,1,0.9,0), method = "k-fold", sequence = TRUE)
+#res <- get_pp_amo(amo_pars = c(4,1,0.9,0), method = "k-fold", sequence = TRUE)
 #-------------------------------------------------------------------------------
 
 ### Function that calculates predictive performance of all methods when the
 # data-generating distribution is an Amoroso
 
-get_pp <- function(amo_pars = c(-1,2,1,5),
+get_pp_amo <- function(amo_pars = c(-1,2,1,5),
                    n = 1000, # size of dataset to be simulated
                    method = "k-fold", # or "split-half"
                    k = 5, # nr of folds (if method = 'k-fold')
