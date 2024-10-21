@@ -102,6 +102,7 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
                              legend = "topright",
                              breaks = 20,
                              varname = NULL,
+                             print_results = FALSE,
                              include.init = FALSE) {
   
   # Provide either a datavector for 'vec' OR
@@ -373,8 +374,10 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
   } else if (plot == 2) {
     
     # Print info about plots
-    cat(grid_plots_info,
-        "\n--------------------------------------------------------------------\n\n")
+    if (print_results == TRUE) {
+      cat(grid_plots_info,
+          "\n--------------------------------------------------------------------\n\n")
+    }
     # Make 3x3 grid
     par(mfrow = c(3, 3), cex.axis = 0.8)
     # Loop through methods
@@ -427,8 +430,10 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
       print("ERROR 2")
     }
     # Print plot info in console
-    cat(best_plot_info,
-        "\n--------------------------------------------------------------------\n\n")
+    if (print_results == TRUE) {
+      cat(best_plot_info,
+          "\n--------------------------------------------------------------------\n\n")
+    }
     # Set plotting parameters
     par(cex.main = 1.4, cex.axis = 1, cex.lab = 1.2, bty = "n", font.lab = 2)
     # Extract name of lowest BIC Amoroso
@@ -485,25 +490,28 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
   ####################
   
   # Print best model info
-  cat("MAXIMUM LIKELIHOOD AMOROSO:\n\n",
-      paste0(max_L_model_tib$method," (",max_L_model_tib$space,")"),"\n")
-  cat("-LL:", max_L_model_tib$negLL, "\n")
-  cat(paste0(" α = ", round(max_L_model_tib$a,digits=2), ", ",
-             "\u2113 = ", round(max_L_model_tib$l,digits=2), ", ",
-             "c = ", round(max_L_model_tib$c,digits=2), ", ",
-             "μ = ", round(max_L_model_tib$mu,digits=2)),"\n\n")
-  
-  cat("LOWEST BIC AMOROSO:\n\n",
-      paste0(min_BIC_model_tib$method," (",min_BIC_model_tib$space,")"),"\n")
-  cat(" BIC:", min_BIC_model_tib$BIC, "\n")
-  cat(paste0(" α = ", round(min_BIC_model_tib$a,digits=2), ", ",
-             "\u2113 = ", round(min_BIC_model_tib$l,digits=2), ", ",
-             "c = ", round(min_BIC_model_tib$c,digits=2), ", ",
-             "μ = ", round(min_BIC_model_tib$mu,digits=2)),"\n")
-  cat("\n--------------------------------------------------------------------\n")
-  
-  # Print info on how to access full output
-  cat(access_info, "\n")
+  if (print_results == TRUE) {
+    cat("MAXIMUM LIKELIHOOD AMOROSO:\n\n",
+        paste0(max_L_model_tib$method," (",max_L_model_tib$space,")"),"\n")
+    cat("-LL:", max_L_model_tib$negLL, "\n")
+    cat(paste0(" α = ", round(max_L_model_tib$a,digits=2), ", ",
+               "\u2113 = ", round(max_L_model_tib$l,digits=2), ", ",
+               "c = ", round(max_L_model_tib$c,digits=2), ", ",
+               "μ = ", round(max_L_model_tib$mu,digits=2)),"\n\n")
+    
+    cat("LOWEST BIC AMOROSO:\n\n",
+        paste0(min_BIC_model_tib$method," (",min_BIC_model_tib$space,")"),"\n")
+    cat(" BIC:", min_BIC_model_tib$BIC, "\n")
+    cat(paste0(" α = ", round(min_BIC_model_tib$a,digits=2), ", ",
+               "\u2113 = ", round(min_BIC_model_tib$l,digits=2), ", ",
+               "c = ", round(min_BIC_model_tib$c,digits=2), ", ",
+               "μ = ", round(min_BIC_model_tib$mu,digits=2)),"\n")
+    cat("\n--------------------------------------------------------------------\n")
+    
+    # Print info on how to access full output
+    cat(access_info, "\n")    
+  }
+
   
   # Return all win models and final best model
   return(invisible(list(
