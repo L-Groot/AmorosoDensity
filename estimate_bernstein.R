@@ -7,15 +7,18 @@ source("https://raw.githubusercontent.com/L-Groot/AmorosoDensity/refs/heads/main
 
 estimate_bernstein <- function(dat, breaks = 20, plot = FALSE, n = 512,
                               main = "Bernstein Polynomial Fit",
-                              bound_type = "sd") {
+                              bound_type = "sd",
+                              print_busy = FALSE) {
   
   # Extract vector name
   vecname <- paste0("'",deparse(substitute(dat)),"'")
     
   # Print busy statement
-  cat("\nBusy estimating Bernstein...\nUsing the provided vector",
-                 vecname,"'\n",
-                 "\n--------------------------------------------------------------------\n\n")
+  if (print_busy == TRUE) {
+    cat("\nBusy estimating Bernstein...\nUsing the provided vector",
+        vecname,"'\n",
+        "\n--------------------------------------------------------------------\n\n") 
+  }
   
   # Remove any missing values
   num_nas_to_remove <- length(dat) - length(na.omit(dat))
