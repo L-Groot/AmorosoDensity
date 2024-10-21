@@ -22,6 +22,21 @@ if (!requireNamespace("AmoRosoDistrib", quietly = TRUE)) {
   install.packages("AmoRosoDistrib")}
 library(AmoRosoDistrib)
 
+# Function to hanlde errors estimation methods
+safe_execute <- function(expr, object_name) {
+  tryCatch(
+    {
+      result <- eval(expr)
+      return(result)
+    },
+    error = function(e) {
+      cat(paste("Error with fitting", object_name, ":", e$message, ";\n",
+                "Other methods were still fit.\n"))
+      return(NA)
+    }
+  )
+}
+
 
 
 #-------------------------------------------------------------------------------
@@ -56,10 +71,21 @@ estimate_amoroso_np <- function(dat,
   # Get n
   n <- length(dat)
   
-  
   #### Amoroso ####
+  amo <- safe_execute(quote(estimate_amoroso(dat, plot=0, criterion="maxL")), "amo")
+
+  #### Bernstein ####
+  bern1 <- safe_execute(quote(estimate_bernstein(dat, bound_type = "sd")), "bern1")
+  bern2 <- safe_execute(quote(estimate_bernstein(dat, bound_type = "Carv")), "bern2")
   
-  amo <- estimate_amoroso(dat, plot=0, criterion="maxL")
+  #### Adjusted KDE ####
+  scKDE_2infplus <- safe_execute(quote(scdensity(dat, constraint = "twoInflections+")), "scKDE_2infplus")
+  scKDE_2inf <- safe_execute(quote(scdensity(dat, constraint = "twoInflections")), "scKDE_2inf")
+  scKDE_uni <- safe_execute(quote(scdensity(dat, constraint = "unimodal")), "scKDE_uni")
+  
+  ##### R density ####
+  rdens <- safe_execute(quote(density(dat)), "rdens")
+  
   # Extract Amoroso parameters
   amo_xx <- amo$x
   if(amorosocrit == "ML") {
@@ -73,7 +99,7 @@ estimate_amoroso_np <- function(dat,
     slice(1) %>%
     select(a, l, c, mu) %>% 
     unlist(use.names = FALSE)
-    #as.vector(unlist(amo_win[,3:6]))
+  #as.vector(unlist(amo_win[,3:6]))
   amo_name <- paste0(amo_win$method, " (", amo_win$space, ")")
   amo_name_id <- paste0(amo_win$method_ID, " (", amo_win$space, ")")
   # Get Amoroso density values
@@ -86,42 +112,23 @@ estimate_amoroso_np <- function(dat,
               pars = amo_pars,
               method = amo_name, method_short = amo_name_id)
   
-  
-  #### Bernstein ####
-  
-  bern1 <- estimate_bernstein(dat, bound_type = "sd")
-  bern2 <- estimate_bernstein(dat, bound_type = "Carv")
-  
-  
-  #### Adjusted KDE ####
-  
-  scKDE_2infplus <- scdensity(dat, constraint = "twoInflections+")
-  scKDE_2inf <- scdensity(dat, constraint = "twoInflections")
-  scKDE_uni <- scdensity(dat, constraint = "unimodal")
-  
-  
-  ##### R density ####
-  
-  rdens <- density(dat)
-  
-  
-  
   # Make list with all models
-  modlist <- list(rdens = rdens, amo = amo, bern1 = bern1, bern2 = bern2,
+  modlist <- list(rdens = rdens, bern1 = bern1, bern2 = bern2,
                   scKDE_uni = scKDE_uni,scKDE_2inf = scKDE_2inf,
-                  scKDE_2infplus = scKDE_2infplus)
+                  scKDE_2infplus = scKDE_2infplus, amo = amo)
+  
+  # Make another list with only valid models (exclude the ones that threw errors)
+  modlist_valid <- modlist[sapply(modlist, function(mod) length(mod) > 1)]
   
   # Define x range for plots
-  xmin <- min(sapply(modlist, function(mod) min(mod$x)))
-  xmax <- max(sapply(modlist, function(mod) max(mod$x)))
+  xmin <- min(sapply(modlist_valid, function(mod) min(mod$x)))
+  xmax <- max(sapply(modlist_valid, function(mod) max(mod$x)))
   x_range <- seq(xmin,xmax,length.out = 1000)
   
   # Define y max for plots (highest density value of all methods)
-  ymax <- max(density(dat)$y,amo_yy,bern1$y,bern2$y,
-              scKDE_2infplus$y,scKDE_2inf$y,scKDE_uni$y) #+ 0.05
+  ymax <- max(sapply(modlist_valid, function(mod) max(mod$y)))
   buffer <- 0.15*ymax
   ymax <- ymax + buffer
-  
   
   
   #####################
@@ -138,10 +145,10 @@ estimate_amoroso_np <- function(dat,
       
       # Make main titles
       amo_title <- paste0("Amoroso", " (", amo$method_short, ")")
-      titles <- c("R density() KDE", amo_title,
+      titles <- c("R density() KDE",
                   "Bernstein Polynomials", "Bernstein Polynomials",
                   "Adj. KDE ('unimodal')","Adj. KDE ('twoInflections')",
-                  "Adj. KDE ('twoInflections+')")
+                  "Adj. KDE ('twoInflections+')", amo_title)
       
       # Initialize 2x3 plotting grid
       par(mfrow=c(2,3), oma = c(0, 0, 5, 0), cex.axis = 0.9, font.lab = 2,
@@ -169,8 +176,10 @@ estimate_amoroso_np <- function(dat,
                  border = "grey85", axes = FALSE, add = TRUE)
           }
           
-          # Add density estimate
-          lines(modlist[[i]]$x, modlist[[i]]$y, col = 'mediumorchid2', lwd = 2)
+          # If model is valid, add density estimate
+          if (length(modlist[[i]]) > 1) {
+            lines(modlist[[i]]$x, modlist[[i]]$y, col = 'mediumorchid2', lwd = 2)
+          }
           
           # Optional: add data-generating normal
           if (generatedbynormal == TRUE) {
@@ -179,8 +188,10 @@ estimate_amoroso_np <- function(dat,
           }
           
         } else {
-          # Add 2nd Bernstein fit
-          lines(modlist[[i]]$x, modlist[[i]]$y, col = 'chartreuse4', lwd = 2)
+          # If 2nd Bernstein fit is valid, add its density estimate
+          if (length(modlist[[i]]) > 1) {
+            lines(modlist[[i]]$x, modlist[[i]]$y, col = 'chartreuse4', lwd = 2)
+          }
           # Add legend
           legend("topright", legend = c("bound.type = 'sd'","bound.type = 'Carv'"),
                  col = c("mediumorchid2","chartreuse4"), lty = 1, lwd = 2, cex = 0.8,
@@ -206,9 +217,9 @@ estimate_amoroso_np <- function(dat,
     } else {
       
       # Make main titles
-      titles <- c("R density()", "Amoroso", "Bernstein", "Bernstein",
+      titles <- c("R density()", "Bernstein", "Bernstein",
                   "Adj. KDE ('unimodal')","Adj. KDE ('twoInflections')",
-                  "Adj. KDE ('twoInflections+')")
+                  "Adj. KDE ('twoInflections+')", "Amoroso")
       
       # Initialize 2x3 plotting grid
       par(mfrow=c(2,3), oma = c(1, 6, 1, 1), mar = c(5,5,5,5), cex.axis = 1.4,
@@ -238,7 +249,9 @@ estimate_amoroso_np <- function(dat,
           }
           
           # Add density estimate
-          lines(modlist[[i]]$x, modlist[[i]]$y, col = 'blueviolet', lwd = 2)
+          if (length(modlist[[i]]) > 1) {
+            lines(modlist[[i]]$x, modlist[[i]]$y, col = "deeppink2", lwd = 2)
+          }
           
           # Optional: add data-generating normal
           if (generatedbynormal == TRUE) {
@@ -248,7 +261,9 @@ estimate_amoroso_np <- function(dat,
           
         } else {
           
-          lines(modlist[[i]]$x, modlist[[i]]$y, col = "deeppink2", lwd = 2)
+          if (length(modlist[[i]]) > 1) {
+            lines(modlist[[i]]$x, modlist[[i]]$y, col = 'chartreuse4', lwd = 2)
+          }
           # Add legend
           # legend("topright", legend = c("bound.type = 'sd'","bound.type = 'Carv'"),
           #        col = c("blueviolet","deeppink2"), lty = 1, lwd = 2, cex = 0.8,
@@ -288,3 +303,5 @@ estimate_amoroso_np <- function(dat,
 
 #dat <- palmerpenguins::penguins$bill_depth_mm
 #res <- estimate_amoroso_np(dat, hist = TRUE, minimal = FALSE)
+
+#res <- estimate_amoroso_np(train)
