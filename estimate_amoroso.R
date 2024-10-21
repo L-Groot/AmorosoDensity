@@ -102,6 +102,7 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
                              legend = "topright",
                              breaks = 20,
                              varname = NULL,
+                             print_busy = FALSE,
                              print_results = FALSE,
                              include.init = FALSE) {
   
@@ -134,9 +135,11 @@ estimate_amoroso <- function(vec=NULL, dataframe=NULL, variable=NULL,
   if (!is.null(vec) && is.vector(vec)) {
     # If vector is provided directly, use it as y
     x <- na.omit(vec)
-    cat("\n\nBusy estimating Amoroso...\nUsing the provided vector",
-        paste0("'",deparse(substitute(vec)),"'\n"),
-        "\n--------------------------------------------------------------------\n\n")
+    if (print_busy == TRUE) {
+      cat("\n\nBusy estimating Amoroso...\nUsing the provided vector",
+          paste0("'",deparse(substitute(vec)),"'\n"),
+          "\n--------------------------------------------------------------------\n\n")
+    }
     # Check if any NAs were removed
     num_nas_removed <- length(vec) - length(na.omit(vec))
     if(num_nas_removed > 0) {
