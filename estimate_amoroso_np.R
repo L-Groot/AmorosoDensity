@@ -47,7 +47,8 @@ safe_execute <- function(expr, object_name) {
 
 
 estimate_amoroso_np <- function(dat,
-                                plot = TRUE, hist = FALSE, minimal = FALSE,
+                                plot = TRUE, hist = FALSE, breaks = 20,
+                                minimal = FALSE,
                                 main = NULL, generatedbynormal = FALSE,
                                 withmean = 0, withsd = 1,
                                 amorosocrit = "ML", xticks = NULL) {
@@ -172,7 +173,7 @@ estimate_amoroso_np <- function(dat,
           
           # Optional: add histogram
           if (hist == TRUE) {
-            hist(dat, prob = T, breaks = 20, col = "grey95",
+            hist(dat, prob = T, breaks = breaks, col = "grey95",
                  border = "grey85", axes = FALSE, add = TRUE)
           }
           
@@ -244,7 +245,7 @@ estimate_amoroso_np <- function(dat,
           
           # Optional: add histogram
           if (hist == TRUE) {
-            hist(dat, prob = T, breaks = 20, col = "grey95",
+            hist(dat, prob = T, breaks = breaks, col = "grey95",
                  border = "grey85", axes = FALSE, add = TRUE)
           }
           
