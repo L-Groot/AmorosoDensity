@@ -44,27 +44,51 @@ calculate_rmse <- function(pred, true) {
 ### Function that calculates predictive performance of all methods when the
 # data-generating distribution is an Amoroso
 
-get_pp_amo <- function(amo_pars = c(-1,2,1,5),
+get_pp <- function(dist = "amoroso", #datagenerating distribution - or "normal"
+                   pars = c(-1,2,1,5), #(a,l,c,mu) or (mean,sd) for normal dist.
                    n = 1000, # size of dataset to be simulated
                    method = "k-fold", # or "split-half"
                    k = 5, # nr of folds (if method = 'k-fold')
                    prop_train = 0.8, # % data in training set (if method = 'split-half')
                    #plot = FALSE, # plot the fits or not
-                   sequence = FALSE, # whether seed should be set for Amoroso data generation
-                   seed = 125 # seed for random fold creation
-          ) 
+                   seed = 125 # seed used for data-generation and fold creation
+                   )
 {
   
+# dist <- "normal"
+# pars <- c(4,0.7)
+# n = 1000
+# method = "k-fold"
+# k = 5
+# seed = 125
   
-  #############################
-  ### GENERATE AMOROSO DATA ###
-  #############################
+  #####################
+  ### GENERATE DATA ###
+  #####################
   
-  true_pars <- amo_pars
-  dat <- rgg4(n,
-              a = true_pars[1], l = true_pars[2],
-              c = true_pars[3], mu = true_pars[4],
-              sequence = sequence)
+  true_pars <- pars
+  
+  if (dist == "amoroso") {
+    # Generate data from Amoroso
+    set.seed(seed)
+    dat <- rgg4(n,
+                a = true_pars[1], l = true_pars[2],
+                c = true_pars[3], mu = true_pars[4]
+    )
+    plot(dat)
+  } else if (dist == "normal") {
+    if(length(true_pars) != 2) {
+      stop("when data-generating distribution is normal, you must supply 2
+      parameters:the mean and the standard deviation.")
+    }
+    # Generate data from normal distribution
+    set.seed(seed)
+    dat <- rnorm(n, mean = true_pars[1], sd = true_pars[2])
+    plot(dat)
+  } else {
+    stop("'dist' must be either 'amoroso' or 'normal'")
+  }
+  
   
   
   ###############
@@ -100,10 +124,12 @@ get_pp_amo <- function(amo_pars = c(-1,2,1,5),
       train <- dat[train_indices]
       test <- dat[-train_indices]
       
+      print(head(train))
+      
       #------------------------------------------------
       # (2) Fit Amoroso and NP methods on training data
       #------------------------------------------------
-      res <- estimate_amoroso_np(train, hist = TRUE, amorosocrit = "ML")
+      res <- estimate_amoroso_np(dat=train, hist = TRUE, amorosocrit = "ML")
       
       #cat("fold =", i, "(after estimation)\n")
       
@@ -174,7 +200,14 @@ get_pp_amo <- function(amo_pars = c(-1,2,1,5),
       #-------------------------------------------
       # (5) Get 'true' density values for test set
       #-------------------------------------------
-      true_y <- dgg4(test, true_pars[1], true_pars[2], true_pars[3], true_pars[4])
+      if (dist == "amoroso") {
+        true_y <- dgg4(test, true_pars[1], true_pars[2], true_pars[3], true_pars[4])
+      } else if (dist == "normal") {
+        true_y <- dnorm(test, mean = true_pars[1], sd = true_pars[2])
+      } else {
+        stop("some error occured :(")
+      }
+      
       
       #-----------------------------
       # (6) Calculate error measures
@@ -182,8 +215,6 @@ get_pp_amo <- function(amo_pars = c(-1,2,1,5),
       mse_values <- c()
       rmse_values <- c()
       mae_values <- c()
-      
-      names(pred_list)
       
       for (i in 1:length(pred_list)) {
         # If fit is valid (i.e., there are predicted values)
@@ -209,8 +240,6 @@ get_pp_amo <- function(amo_pars = c(-1,2,1,5),
       error_tib[[paste0("rmse_f", fold)]] <- rmse_values
       error_tib[[paste0("mae_f", fold)]] <- mae_values
     }
-    
-    print(error_tib)
     
     #---------------------------------
     # Average the error over the folds
@@ -359,3 +388,10 @@ get_pp_amo <- function(amo_pars = c(-1,2,1,5),
     return(error_on_test_tib)
   }
 }
+
+#set.seed(125)
+#dat <- rnorm(1000,mean=4, sd=0.7)
+#estimate_amoroso_np(dat, hist = TRUE)
+
+get_pp(dist="normal", pars=c(4,0.7))
+get_pp(dist="amoroso", pars=c(4,1,0.9,0))
