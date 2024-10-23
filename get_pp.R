@@ -123,13 +123,12 @@ get_pp <- function(dist = "amoroso", #datagenerating distribution - or "normal"
       train_indices <- folds[[fold]]
       train <- dat[train_indices]
       test <- dat[-train_indices]
-      
-      print(head(train))
-      
+
       #------------------------------------------------
       # (2) Fit Amoroso and NP methods on training data
       #------------------------------------------------
-      res <- estimate_amoroso_np(dat=train, hist = TRUE, amorosocrit = "ML")
+        res <- estimate_amoroso_np(dat=train, hist = TRUE, amorosocrit = "ML")
+      
       
       #cat("fold =", i, "(after estimation)\n")
       
@@ -295,7 +294,7 @@ get_pp <- function(dist = "amoroso", #datagenerating distribution - or "normal"
     #--------------------------------------------
     # Fit Amoroso and NP methods on training data
     #--------------------------------------------
-    res <- estimate_amoroso_np(train, hist = TRUE, amorosocrit = "ML")
+    res <- estimate_amoroso_np(train, hist = TRUE, breaks = 3, amorosocrit = "ML")
     
     #---------------------------------------
     # Make continuous functions from NP fits
@@ -393,5 +392,14 @@ get_pp <- function(dist = "amoroso", #datagenerating distribution - or "normal"
 #dat <- rnorm(1000,mean=4, sd=0.7)
 #estimate_amoroso_np(dat, hist = TRUE)
 
-get_pp(dist="normal", pars=c(4,0.7))
-get_pp(dist="amoroso", pars=c(4,1,0.9,0))
+#get_pp(dist="normal", pars=c(4,0.7))
+#get_pp(dist="amoroso", pars=c(4,1,0.9,0))
+
+set.seed(125)
+#data <- rgg4(1000, a=4,l=1,c=0.9,mu=0)
+#data <- rgg4(1000, a=4,l=1,c=7,mu=0)
+data <- rgg4(1000, a=4,l=1,c=-10,mu=0)
+hist(data)
+estimate_amoroso_np(dat=data, hist = TRUE)
+#estimate_amoroso(data,plot=2)
+

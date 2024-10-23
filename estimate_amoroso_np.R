@@ -306,3 +306,4 @@ estimate_amoroso_np <- function(dat,
 #res <- estimate_amoroso_np(dat, hist = TRUE, minimal = FALSE)
 
 #res <- estimate_amoroso_np(train)
+
