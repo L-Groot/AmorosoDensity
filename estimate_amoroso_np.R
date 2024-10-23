@@ -46,13 +46,13 @@ safe_execute <- function(expr, object_name) {
 ### Function that estimates and plots NP and Amoroso methods ###
 
 
-estimate_amoroso_np <- function(dat,
+estimate_amoroso_np <- function(dat = NULL,
                                 plot = TRUE, hist = FALSE, breaks = 20,
                                 minimal = FALSE,
                                 main = NULL, generatedbynormal = FALSE,
                                 withmean = 0, withsd = 1,
                                 amorosocrit = "ML", xticks = NULL) {
-  
+
   
   #############################
   ### 1. ESTIMATE DENSITIES ###
@@ -71,6 +71,8 @@ estimate_amoroso_np <- function(dat,
   
   # Get n
   n <- length(dat)
+  
+  cat("n = ",n,"\n")
   
   #### Amoroso ####
   amo <- safe_execute(quote(estimate_amoroso(dat, plot=0, criterion="maxL")), "amo")
@@ -302,8 +304,14 @@ estimate_amoroso_np <- function(dat,
 
 ### Test the function ###
 
-#dat <- palmerpenguins::penguins$bill_depth_mm
+#data <- palmerpenguins::penguins$bill_depth_mm
+#dat <- palmerpenguins::penguins$bill_length_mm
+#dat <- palmerpenguins::penguins$flipper_length_mm
 #res <- estimate_amoroso_np(dat, hist = TRUE, minimal = FALSE)
 
-#res <- estimate_amoroso_np(train)
+set.seed(125)
+data <- rgg4(1000, a=4,l=1,c=7,mu=0)
+hist(data)
+estimate_amoroso_np(dat = data, hist = TRUE)
+
 
