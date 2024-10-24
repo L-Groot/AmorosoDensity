@@ -16,9 +16,10 @@ if (!requireNamespace("tidyverse", quietly = TRUE)) {
   install.packages("tidyverse")}
 library(tidyverse)
 
-options(scipen = 999)
-
 #-------------------------------------------------------------------------------
+options(scipen = 999)
+#-------------------------------------------------------------------------------
+
 ### Custom functions
 
 # Mean Squared Error (MSE) function
@@ -54,13 +55,6 @@ get_pp <- function(dist = "amoroso", #datagenerating distribution - or "normal"
                    seed = 125 # seed used for data-generation and fold creation
                    )
 {
-  
-# dist <- "normal"
-# pars <- c(4,0.7)
-# n = 1000
-# method = "k-fold"
-# k = 5
-# seed = 125
   
   #####################
   ### GENERATE DATA ###
@@ -263,17 +257,6 @@ get_pp <- function(dist = "amoroso", #datagenerating distribution - or "normal"
       ) %>% select(Method,mse_av,rmse_av,mae_av,nr_na_folds)
     
     
-    # av_error_tib <- error_tib %>%
-    #   mutate(
-    #     mse_av = rowMeans(select(., starts_with("mse_")), na.rm = TRUE),
-    #     rmse_av = rowMeans(select(., starts_with("rmse_")), na.rm = TRUE),
-    #     mae_av = rowMeans(select(., starts_with("mae_")), na.rm = TRUE)
-    #   ) %>% select(Method,starts_with(c("mse_av","rmse_av","mae_av")))
-    # 
-    #print("av_error_tib")
-    #print(av_error_tib)
-    
-    
     ##################
     ### SPLIT-HALF ###
     ##################
@@ -388,18 +371,22 @@ get_pp <- function(dist = "amoroso", #datagenerating distribution - or "normal"
   }
 }
 
-#set.seed(125)
-#dat <- rnorm(1000,mean=4, sd=0.7)
-#estimate_amoroso_np(dat, hist = TRUE)
+#-------------------------------------------------------------------------------
 
-#get_pp(dist="normal", pars=c(4,0.7))
-#get_pp(dist="amoroso", pars=c(4,1,0.9,0))
+### TEST THE FUNCTION
 
-set.seed(125)
-#data <- rgg4(1000, a=4,l=1,c=0.9,mu=0)
-#data <- rgg4(1000, a=4,l=1,c=7,mu=0)
-data <- rgg4(1000, a=4,l=1,c=-10,mu=0)
-hist(data)
-estimate_amoroso_np(dat=data, hist = TRUE)
-#estimate_amoroso(data,plot=2)
+# Data-generating Amoroso
+#res <- get_pp(dist="amoroso", n = 50, pars=c(4,1,0.9,0))
+#res <- get_pp(dist="amoroso", n = 100, pars=c(4,1,0.9,0))
+#res <- get_pp(dist="amoroso", n = 1000, pars=c(4,1,0.9,0))
+
+#res <- get_pp(dist="amoroso", n = 50, pars=c(4,1,7,0))
+res <- get_pp(dist="amoroso", n = 100, pars=c(4,1,7,0))
+res
+#res <- get_pp(dist="amoroso", n = 1000, pars=c(4,1,7,0))
+
+# Data-generating Normal
+#res <- get_pp(dist="normal", n = 50, pars=c(4,0.7))
+#res <- get_pp(dist="normal", n = 100, pars=c(4,0.7))
+#res <- get_pp(dist="normal", n = 1000, pars=c(4,0.7))
 
