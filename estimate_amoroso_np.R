@@ -22,11 +22,13 @@ if (!requireNamespace("AmoRosoDistrib", quietly = TRUE)) {
   install.packages("AmoRosoDistrib")}
 library(AmoRosoDistrib)
 
-# Function to hanlde errors estimation methods
-safe_execute <- function(expr, object_name) {
+
+# Function that can handle if one method fails to fit
+safe_execute <- function(expr, object_name, data_vector) {
   tryCatch(
     {
-      result <- eval(expr)
+      # Use bquote to inject data_vector into the expression
+      result <- eval(bquote(.(expr)), envir = list(dat = data_vector))
       return(result)
     },
     error = function(e) {
@@ -36,7 +38,6 @@ safe_execute <- function(expr, object_name) {
     }
   )
 }
-
 
 
 #-------------------------------------------------------------------------------
@@ -75,19 +76,19 @@ estimate_amoroso_np <- function(dat = NULL,
   cat("n = ",n,"\n")
   
   #### Amoroso ####
-  amo <- safe_execute(quote(estimate_amoroso(dat, plot=0, criterion="maxL")), "amo")
+  amo <- safe_execute(quote(estimate_amoroso(dat, plot=0, criterion="maxL")), "amo", dat)
 
   #### Bernstein ####
-  bern1 <- safe_execute(quote(estimate_bernstein(dat, bound_type = "sd")), "bern1")
-  bern2 <- safe_execute(quote(estimate_bernstein(dat, bound_type = "Carv")), "bern2")
+  bern1 <- safe_execute(quote(estimate_bernstein(dat, bound_type = "sd")), "bern1", dat)
+  bern2 <- safe_execute(quote(estimate_bernstein(dat, bound_type = "Carv")), "bern2", dat)
   
   #### Adjusted KDE ####
-  scKDE_2infplus <- safe_execute(quote(scdensity(dat, constraint = "twoInflections+")), "scKDE_2infplus")
-  scKDE_2inf <- safe_execute(quote(scdensity(dat, constraint = "twoInflections")), "scKDE_2inf")
-  scKDE_uni <- safe_execute(quote(scdensity(dat, constraint = "unimodal")), "scKDE_uni")
+  scKDE_2infplus <- safe_execute(quote(scdensity(dat, constraint = "twoInflections+")), "scKDE_2infplus", dat)
+  scKDE_2inf <- safe_execute(quote(scdensity(dat, constraint = "twoInflections")), "scKDE_2inf", dat)
+  scKDE_uni <- safe_execute(quote(scdensity(dat, constraint = "unimodal")), "scKDE_uni", dat)
   
   ##### R density ####
-  rdens <- safe_execute(quote(density(dat)), "rdens")
+  rdens <- safe_execute(quote(density(dat)), "rdens", dat)
   
   # Extract Amoroso parameters
   amo_xx <- amo$x
@@ -309,9 +310,11 @@ estimate_amoroso_np <- function(dat = NULL,
 #dat <- palmerpenguins::penguins$flipper_length_mm
 #res <- estimate_amoroso_np(dat, hist = TRUE, minimal = FALSE)
 
-set.seed(125)
-data <- rgg4(1000, a=4,l=1,c=7,mu=0)
-hist(data)
-estimate_amoroso_np(dat = data, hist = TRUE)
+#set.seed(125)
+#data <- rgg4(1000, a=4,l=1,c=7,mu=0)
+#data <- rgg4(100, a=4,l=1,c=6,mu=0)
+#data <- rnorm(70, mean = 4, sd = 0.7)
 
+#hist(data)
+#estimate_amoroso_np(dat = data, hist = TRUE)
 
